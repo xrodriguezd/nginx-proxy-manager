@@ -182,6 +182,12 @@
 	"certificates.key-type-rsa": {
 		"defaultMessage": "RSA 2048"
 	},
+	"certificates.minica": {
+		"defaultMessage": "MiniCA"
+	},
+	"certificates.minica.trust-warning": {
+		"defaultMessage": "Los clientes que usen este certificado deben confiar en el certificado raíz de la MiniCA configurada."
+	},
 	"certificates.request.subtitle": {
 		"defaultMessage": "con Let's Encrypt"
 	},
@@ -601,6 +607,33 @@
 	},
 	"settings.default-site.redirect": {
 		"defaultMessage": "Redirigir"
+	},
+	"settings.minica": {
+		"defaultMessage": "MiniCA"
+	},
+	"settings.minica.ca-id": {
+		"defaultMessage": "ID de la autoridad certificadora"
+	},
+	"settings.minica.connection-success": {
+		"defaultMessage": "La conexión con MiniCA se ha verificado correctamente."
+	},
+	"settings.minica.description": {
+		"defaultMessage": "Configura la instancia de MiniCA y la única CA que utilizará Nginx Proxy Manager. Los certificados se emiten por 90 días y se renuevan automáticamente cuando quedan menos de 30 días."
+	},
+	"settings.minica.password": {
+		"defaultMessage": "Contraseña"
+	},
+	"settings.minica.password-note": {
+		"defaultMessage": "La contraseña se guarda en el backend y nunca se devuelve al navegador. Déjala en blanco para conservar la contraseña actual."
+	},
+	"settings.minica.test-connectivity": {
+		"defaultMessage": "Probar conectividad"
+	},
+	"settings.minica.url": {
+		"defaultMessage": "URL base de la API de MiniCA"
+	},
+	"settings.minica.username": {
+		"defaultMessage": "Nombre de usuario"
 	},
 	"setup.preamble": {
 		"defaultMessage": "Comienza creando tu cuenta de administrador."

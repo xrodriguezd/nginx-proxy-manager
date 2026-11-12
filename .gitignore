@@ -10,4 +10,4 @@ docker/dev/dnsrouter-config.json.tmp
 docker/dev/resolv.conf
 .claude
 test/__pycache__
-
+xrd/

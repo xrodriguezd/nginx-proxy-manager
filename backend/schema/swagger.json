@@ -291,6 +291,11 @@
 				"$ref": "./paths/settings/get.json"
 			}
 		},
+		"/settings/minica/test": {
+			"post": {
+				"$ref": "./paths/settings/minica/test/post.json"
+			}
+		},
 		"/settings/{settingID}": {
 			"get": {
 				"$ref": "./paths/settings/settingID/get.json"

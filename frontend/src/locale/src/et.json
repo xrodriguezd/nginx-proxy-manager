@@ -251,6 +251,12 @@
 	"certificates.key-type-rsa": {
 		"defaultMessage": "RSA 2048"
 	},
+	"certificates.minica": {
+		"defaultMessage": "MiniCA sertifikaat"
+	},
+	"certificates.minica.trust-warning": {
+		"defaultMessage": "Seda sertifikaati kasutavad kliendid peavad usaldama seadistatud MiniCA juursertifikaati."
+	},
 	"certificates.request.subtitle": {
 		"defaultMessage": "Let's Encryptiga"
 	},
@@ -757,6 +763,33 @@
 	},
 	"settings.default-site.redirect": {
 		"defaultMessage": "Ümbersuunamine"
+	},
+	"settings.minica": {
+		"defaultMessage": "MiniCA seaded"
+	},
+	"settings.minica.ca-id": {
+		"defaultMessage": "Sertifitseerimiskeskuse ID"
+	},
+	"settings.minica.connection-success": {
+		"defaultMessage": "MiniCA ühendus on edukalt kinnitatud."
+	},
+	"settings.minica.description": {
+		"defaultMessage": "Seadista MiniCA eksemplar ja üks CA, mida Nginx Proxy Manager kasutab. Sertifikaadid kehtivad 90 päeva ja neid uuendatakse automaatselt, kui kehtivusajani on jäänud vähem kui 30 päeva."
+	},
+	"settings.minica.password": {
+		"defaultMessage": "Parool"
+	},
+	"settings.minica.password-note": {
+		"defaultMessage": "Parool salvestatakse taustaprogrammis ja seda ei saadeta brauserile. Praeguse parooli säilitamiseks jäta väli tühjaks."
+	},
+	"settings.minica.test-connectivity": {
+		"defaultMessage": "Testi ühenduvust"
+	},
+	"settings.minica.url": {
+		"defaultMessage": "MiniCA API põhiaadress"
+	},
+	"settings.minica.username": {
+		"defaultMessage": "Kasutajanimi"
 	},
 	"setup.preamble": {
 		"defaultMessage": "Alustuseks loo endale administraatori konto."

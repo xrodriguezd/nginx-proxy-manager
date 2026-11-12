@@ -1,0 +1,37 @@
+{
+	"operationId": "testMiniCAConnection",
+	"summary": "Test MiniCA connectivity",
+	"description": "Uses the saved MiniCA settings to verify credentials and access to the configured certificate authority.",
+	"tags": ["settings"],
+	"security": [
+		{
+			"bearerAuth": ["admin"]
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "MiniCA connection succeeded",
+			"content": {
+				"application/json": {
+					"examples": {
+						"default": {
+							"value": {
+								"status": "ok"
+							}
+						}
+					},
+					"schema": {
+						"type": "object",
+						"required": ["status"],
+						"properties": {
+							"status": {
+								"type": "string",
+								"enum": ["ok"]
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

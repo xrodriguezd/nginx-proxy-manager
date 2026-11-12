@@ -49,7 +49,7 @@ export function DomainsFormatter({ domains, createdOn, niceName, provider, color
 			</span>,
 		);
 	}
-	if (!domains || (niceName && provider !== "letsencrypt")) {
+	if (!domains || (niceName && provider !== "letsencrypt" && provider !== "minica")) {
 		elms.push(
 			<span key="nice-name" className="badge bg-info-lt me-2">
 				{niceName}

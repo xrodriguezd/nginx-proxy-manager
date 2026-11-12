@@ -21,6 +21,15 @@
 									"description": "What to show when Nginx is hit with an unknown Host",
 									"value": "congratulations",
 									"meta": {}
+								},
+								{
+									"id": "minica",
+									"name": "MiniCA",
+									"description": "Connection to the MiniCA certificate authority",
+									"value": "configured",
+									"meta": {
+										"password_configured": true
+									}
 								}
 							]
 						}

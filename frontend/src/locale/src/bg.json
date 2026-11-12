@@ -182,6 +182,12 @@
 	"certificates.key-type-rsa": {
 		"defaultMessage": "RSA 2048"
 	},
+	"certificates.minica": {
+		"defaultMessage": "MiniCA"
+	},
+	"certificates.minica.trust-warning": {
+		"defaultMessage": "The clients using this certificate must trust the configured MiniCA root certificate."
+	},
 	"certificates.request.subtitle": {
 		"defaultMessage": "с Let's Encrypt"
 	},
@@ -601,6 +607,27 @@
 	},
 	"settings.default-site.redirect": {
 		"defaultMessage": "Пренасочване"
+	},
+	"settings.minica": {
+		"defaultMessage": "MiniCA"
+	},
+	"settings.minica.ca-id": {
+		"defaultMessage": "Certificate Authority ID"
+	},
+	"settings.minica.description": {
+		"defaultMessage": "Configure the MiniCA instance and the single CA Nginx Proxy Manager will use. Certificates are issued for 90 days and renewed automatically when fewer than 30 days remain."
+	},
+	"settings.minica.password": {
+		"defaultMessage": "Password"
+	},
+	"settings.minica.password-note": {
+		"defaultMessage": "The password is stored by the backend and never returned to the browser. Leave blank to keep the current password."
+	},
+	"settings.minica.url": {
+		"defaultMessage": "MiniCA API base URL"
+	},
+	"settings.minica.username": {
+		"defaultMessage": "Username"
 	},
 	"setup.preamble": {
 		"defaultMessage": "Започнете, като създадете администраторски акаунт."

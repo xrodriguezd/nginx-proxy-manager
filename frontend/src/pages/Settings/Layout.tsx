@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { T } from "src/locale";
 import DefaultSite from "./DefaultSite";
+import MiniCA from "./MiniCA";
 
 export default function Layout() {
+	const [section, setSection] = useState("default-site");
 	// Taken from https://preview.tabler.io/settings.html
 	// Refer to that when updating this content
 
@@ -22,16 +25,29 @@ export default function Layout() {
 							<div className="list-group list-group-transparent">
 								<a
 									href="#"
-									className="list-group-item list-group-item-action d-flex align-items-center active"
-									onClick={(e) => e.preventDefault()}
+									className={`list-group-item list-group-item-action d-flex align-items-center ${section === "default-site" ? "active" : ""}`}
+									onClick={(e) => {
+										e.preventDefault();
+										setSection("default-site");
+									}}
 								>
 									<T id="settings.default-site" />
+								</a>
+								<a
+									href="#"
+									className={`list-group-item list-group-item-action d-flex align-items-center ${section === "minica" ? "active" : ""}`}
+									onClick={(e) => {
+										e.preventDefault();
+										setSection("minica");
+									}}
+								>
+									<T id="settings.minica" />
 								</a>
 							</div>
 						</div>
 					</div>
 					<div className="col-12 col-md-9 d-flex flex-column">
-						<DefaultSite />
+						{section === "minica" ? <MiniCA /> : <DefaultSite />}
 					</div>
 				</div>
 			</div>

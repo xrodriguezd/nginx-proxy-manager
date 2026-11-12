@@ -11,6 +11,7 @@ import { installPlugin } from "../lib/certbot.js";
 import { useLetsencryptServer, useLetsencryptStaging } from "../lib/config.js";
 import error from "../lib/error.js";
 import utils from "../lib/utils.js";
+import * as minica from "./minica.js";
 import { debug, ssl as logger } from "../logger.js";
 import certificateModel from "../models/certificate.js";
 import tokenModel from "../models/token.js";
@@ -180,7 +181,14 @@ const runCertbot = async (args, opts, dnsProvider, credentials) => {
 };
 
 const omissions = () => {
-	return ["is_deleted", "owner.is_deleted", "meta.dns_provider_credentials", "meta.certificate_key"];
+	return [
+		"is_deleted",
+		"owner.is_deleted",
+		"meta.dns_provider_credentials",
+		"meta.certificate_key",
+		"meta.minica_ca_id",
+		"meta.minica_certificate_id",
+	];
 };
 
 const internalCertificate = {
@@ -191,7 +199,7 @@ const internalCertificate = {
 	renewBeforeExpirationBy: [30, "days"],
 
 	initTimer: () => {
-		logger.info("Let's Encrypt Renewal Timer initialized");
+		logger.info("Certificate renewal timer initialized");
 		internalCertificate.interval = setInterval(
 			internalCertificate.processExpiringHosts,
 			internalCertificate.intervalTimeout,
@@ -207,18 +215,18 @@ const internalCertificate = {
 		if (!internalCertificate.intervalProcessing) {
 			internalCertificate.intervalProcessing = true;
 			logger.info(
-				`Renewing SSL certs expiring within ${internalCertificate.renewBeforeExpirationBy[0]} ${internalCertificate.renewBeforeExpirationBy[1]} ...`,
+				`Renewing certificates expiring within ${internalCertificate.renewBeforeExpirationBy[0]} ${internalCertificate.renewBeforeExpirationBy[1]} ...`,
 			);
 
 			const expirationThreshold = moment()
 				.add(internalCertificate.renewBeforeExpirationBy[0], internalCertificate.renewBeforeExpirationBy[1])
 				.format("YYYY-MM-DD HH:mm:ss");
 
-			// Fetch all the letsencrypt certs from the db that will expire within the configured threshold
+			// Fetch all automatically managed certificates that expire within the configured threshold
 			certificateModel
 				.query()
 				.where("is_deleted", 0)
-				.andWhere("provider", "letsencrypt")
+				.whereIn("provider", ["letsencrypt", "minica"])
 				.andWhere("expires_on", "<", expirationThreshold)
 				.then((certificates) => {
 					if (!certificates?.length) {
@@ -263,7 +271,7 @@ const internalCertificate = {
 					});
 				})
 				.then(() => {
-					logger.info("Completed SSL cert renew process");
+					logger.info("Completed certificate renewal process");
 					internalCertificate.intervalProcessing = false;
 				})
 				.catch((err) => {
@@ -282,7 +290,7 @@ const internalCertificate = {
 		await access.can("certificates:create", data);
 		data.owner_user_id = access.token.getUserId(1);
 
-		if (data.provider === "letsencrypt") {
+		if (data.provider === "letsencrypt" || data.provider === "minica") {
 			data.nice_name = data.domain_names.join(", ");
 		}
 
@@ -376,9 +384,33 @@ const internalCertificate = {
 					await certificateModel.query().deleteById(certificate.id);
 					throw err;
 				}
+			} else if (certificate.provider === "minica") {
+				const { cert, caId } = await minica.issue(certificate.domain_names);
+				await internalCertificate.checkKeyMatchesCertificate(cert.cert_pem, cert.key_pem);
+				const certInfo = await internalCertificate.getCertificateInfo(cert.cert_pem, true);
+				const savedRow = await certificateModel.query().patchAndFetchById(certificate.id, {
+					expires_on: moment(certInfo.dates.to, "X").format("YYYY-MM-DD HH:mm:ss"),
+					meta: {
+						...certificate.meta,
+						certificate: cert.cert_pem,
+						certificate_key: cert.key_pem,
+						minica_ca_id: caId,
+						minica_certificate_id: cert.id,
+					},
+				});
+				await internalCertificate.writeCustomCert(savedRow);
+				const safeRow = utils.omitRow(omissions())(savedRow);
+				await internalCertificate.addCreatedAuditLog(access, certificate.id, {
+					...safeRow,
+					meta: internalCertificate.cleanMeta({ ...safeRow.meta }),
+				});
+				return safeRow;
 			}
 		} catch (err) {
 			// Delete the certificate here. This is a hard delete, since it never existed properly
+			if (certificate.provider === "minica") {
+				internalCertificate.removeCustomCertificateFiles(certificate.id);
+			}
 			await certificateModel.query().deleteById(certificate.id);
 			throw err;
 		}
@@ -505,16 +537,17 @@ const internalCertificate = {
 	download: async (access, data) => {
 		await access.can("certificates:get", data);
 		const certificate = await internalCertificate.get(access, data);
-		if (certificate.provider === "letsencrypt") {
+		if (certificate.provider === "letsencrypt" || certificate.provider === "minica") {
 			const zipDirectory = internalCertificate.getLiveCertPath(data.id);
-			if (!fs.existsSync(zipDirectory)) {
-				throw new error.ItemNotFoundError(`Certificate ${certificate.nice_name} does not exists`);
+			const directory = certificate.provider === "minica" ? `/data/custom_ssl/npm-${data.id}` : zipDirectory;
+			if (!fs.existsSync(directory)) {
+				throw new error.ItemNotFoundError(`Certificate ${certificate.nice_name} does not exist`);
 			}
 
 			const certFiles = fs
-				.readdirSync(zipDirectory)
+				.readdirSync(directory)
 				.filter((fn) => fn.endsWith(".pem"))
-				.map((fn) => fs.realpathSync(path.join(zipDirectory, fn)));
+				.map((fn) => fs.realpathSync(path.join(directory, fn)));
 
 			const downloadName = `npm-${data.id}-${Date.now()}.zip`;
 			const opName = `/tmp/${downloadName}`;
@@ -525,7 +558,7 @@ const internalCertificate = {
 				fileName: opName,
 			};
 		}
-		throw new error.ValidationError("Only Let'sEncrypt certificates can be downloaded");
+		throw new error.ValidationError("Only Let's Encrypt and MiniCA certificates can be downloaded");
 	},
 
 	/**
@@ -615,6 +648,8 @@ const internalCertificate = {
 					`Certificate #${row.id} was deleted, but these files could not be removed and should be deleted by hand: ${leftover.join(", ")}`,
 				);
 			}
+		} else if (row.provider === "minica") {
+			internalCertificate.removeCustomCertificateFiles(row.id);
 		}
 		return true;
 	},
@@ -707,7 +742,7 @@ const internalCertificate = {
 	 * @returns {Promise}
 	 */
 	writeCustomCert: async (certificate) => {
-		logger.info("Writing Custom Certificate:", certificate);
+		logger.info(`Writing certificate files for Cert #${certificate.id}`);
 
 		const dir = `/data/custom_ssl/npm-${certificate.id}`;
 
@@ -724,14 +759,14 @@ const internalCertificate = {
 
 			try {
 				if (!fs.existsSync(dir)) {
-					fs.mkdirSync(dir);
+					fs.mkdirSync(dir, { mode: 0o700 });
 				}
 			} catch (err) {
 				reject(err);
 				return;
 			}
 
-			fs.writeFile(`${dir}/fullchain.pem`, certData, (err) => {
+			fs.writeFile(`${dir}/fullchain.pem`, certData, { mode: 0o644 }, (err) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -740,7 +775,7 @@ const internalCertificate = {
 			});
 		}).then(() => {
 			return new Promise((resolve, reject) => {
-				fs.writeFile(`${dir}/privkey.pem`, certificate.meta.certificate_key, (err) => {
+				fs.writeFile(`${dir}/privkey.pem`, certificate.meta.certificate_key, { mode: 0o600 }, (err) => {
 					if (err) {
 						reject(err);
 					} else {
@@ -749,6 +784,15 @@ const internalCertificate = {
 				});
 			});
 		});
+	},
+
+	removeCustomCertificateFiles: (certificateId) => {
+		const dir = `/data/custom_ssl/npm-${certificateId}`;
+		try {
+			fs.rmSync(dir, { recursive: true, force: true });
+		} catch (err) {
+			logger.error(`Could not remove custom certificate files at ${dir}: ${err.message}`);
+		}
 	},
 
 	/**
@@ -1219,7 +1263,42 @@ const internalCertificate = {
 			return updatedCertificate;
 		}
 
-		throw new error.ValidationError("Only Let'sEncrypt certificates can be renewed");
+		if (certificate.provider === "minica") {
+			const stored = await certificateModel.query().where("id", certificate.id).first();
+			if (!stored?.meta?.minica_certificate_id || !stored?.meta?.minica_ca_id) {
+				throw new error.ValidationError(
+					"MiniCA certificate metadata is missing; this certificate cannot be renewed",
+				);
+			}
+			const renewed = await minica.renew(stored.meta.minica_ca_id, stored.meta.minica_certificate_id);
+			if (renewed.id !== stored.meta.minica_certificate_id) {
+				throw new error.ValidationError("MiniCA renewed a different certificate than the one requested");
+			}
+			await internalCertificate.checkKeyMatchesCertificate(renewed.cert_pem, renewed.key_pem);
+			const certInfo = await internalCertificate.getCertificateInfo(renewed.cert_pem, true);
+			const updatedCertificate = await certificateModel.query().patchAndFetchById(certificate.id, {
+				expires_on: moment(certInfo.dates.to, "X").format("YYYY-MM-DD HH:mm:ss"),
+				meta: {
+					...stored.meta,
+					certificate: renewed.cert_pem,
+					certificate_key: renewed.key_pem,
+					minica_certificate: certInfo,
+				},
+			});
+			await internalCertificate.writeCustomCert(updatedCertificate);
+			await internalAuditLog.add(access, {
+				action: "renewed",
+				object_type: "certificate",
+				object_id: updatedCertificate.id,
+				meta: internalCertificate.cleanMeta(utils.omitRow(omissions())(updatedCertificate).meta),
+			});
+			if (reload) {
+				await internalCertificate.reloadAfterRenew();
+			}
+			return utils.omitRow(omissions())(updatedCertificate);
+		}
+
+		throw new error.ValidationError("Only Let's Encrypt and MiniCA certificates can be renewed");
 	},
 
 	/**

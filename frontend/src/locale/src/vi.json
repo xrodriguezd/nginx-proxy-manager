@@ -251,6 +251,12 @@
 	"certificates.key-type-rsa": {
 		"defaultMessage": "RSA 2048"
 	},
+	"certificates.minica": {
+		"defaultMessage": "Chứng chỉ MiniCA"
+	},
+	"certificates.minica.trust-warning": {
+		"defaultMessage": "Các máy khách sử dụng chứng chỉ này phải tin cậy chứng chỉ gốc MiniCA đã cấu hình."
+	},
 	"certificates.request.subtitle": {
 		"defaultMessage": "bằng Let's Encrypt"
 	},
@@ -757,6 +763,33 @@
 	},
 	"settings.default-site.redirect": {
 		"defaultMessage": "Chuyển hướng"
+	},
+	"settings.minica": {
+		"defaultMessage": "Cài đặt MiniCA"
+	},
+	"settings.minica.ca-id": {
+		"defaultMessage": "ID tổ chức phát hành chứng chỉ"
+	},
+	"settings.minica.connection-success": {
+		"defaultMessage": "Đã xác minh kết nối MiniCA thành công."
+	},
+	"settings.minica.description": {
+		"defaultMessage": "Cấu hình phiên bản MiniCA và CA duy nhất mà Nginx Proxy Manager sẽ sử dụng. Chứng chỉ có hiệu lực 90 ngày và được tự động gia hạn khi còn dưới 30 ngày."
+	},
+	"settings.minica.password": {
+		"defaultMessage": "Mật khẩu"
+	},
+	"settings.minica.password-note": {
+		"defaultMessage": "Mật khẩu được lưu ở backend và không bao giờ được gửi lại cho trình duyệt. Để trống để giữ nguyên mật khẩu hiện tại."
+	},
+	"settings.minica.test-connectivity": {
+		"defaultMessage": "Kiểm tra kết nối"
+	},
+	"settings.minica.url": {
+		"defaultMessage": "URL cơ sở API MiniCA"
+	},
+	"settings.minica.username": {
+		"defaultMessage": "Tên người dùng"
 	},
 	"setup.preamble": {
 		"defaultMessage": "Bắt đầu bằng cách tạo tài khoản quản trị viên."

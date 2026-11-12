@@ -3,6 +3,15 @@ import errs from "../lib/error.js";
 import settingModel from "../models/setting.js";
 import internalNginx from "./nginx.js";
 
+const sanitizeSetting = (row) => {
+	if (row?.id === "minica" && row.meta) {
+		row.meta = { ...row.meta };
+		row.meta.password_configured = Boolean(row.meta.password_configured || row.meta.password);
+		delete row.meta.password;
+	}
+	return row;
+};
+
 const internalSetting = {
 	/**
 	 * @param  {Access}  access
@@ -24,6 +33,23 @@ const internalSetting = {
 					);
 				}
 
+				if (data.id === "minica") {
+					return settingModel
+						.query()
+						.where({ id: data.id })
+						.first()
+						.then((stored) => {
+							const meta = { ...data.meta };
+							if (!meta.password && stored?.meta?.password) {
+								meta.password = stored.meta.password;
+							}
+							delete meta.password_configured;
+							return settingModel
+								.query()
+								.where({ id: data.id })
+								.patch({ ...data, meta });
+						});
+				}
 				return settingModel.query().where({ id: data.id }).patch(data);
 			})
 			.then(() => {
@@ -86,7 +112,7 @@ const internalSetting = {
 			})
 			.then((row) => {
 				if (row) {
-					return row;
+					return sanitizeSetting(row);
 				}
 				throw new errs.ItemNotFoundError(data.id);
 			});
@@ -117,7 +143,10 @@ const internalSetting = {
 	 */
 	getAll: (access) => {
 		return access.can("settings:list").then(() => {
-			return settingModel.query().orderBy("description", "ASC");
+			return settingModel
+				.query()
+				.orderBy("description", "ASC")
+				.then((rows) => rows.map(sanitizeSetting));
 		});
 	},
 };

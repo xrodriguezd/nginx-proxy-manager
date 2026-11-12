@@ -86,6 +86,18 @@ const setupDefaultSettings = async () => {
 		});
 		logger.info("Default settings added");
 	}
+
+	const minicaSetting = await settingModel.query().select("id").where({ id: "minica" }).first();
+	if (!minicaSetting?.id) {
+		await settingModel.query().insert({
+			id: "minica",
+			name: "MiniCA",
+			description: "Connection to the MiniCA certificate authority",
+			value: "disabled",
+			meta: {},
+		});
+		logger.info("MiniCA settings added");
+	}
 };
 
 /**

@@ -26,6 +26,15 @@ Tampoco necesitas tener tu _Host Proxy_ configurado para acceso HTTP.
 
 Este proceso _sí_ admite dominios comodín.
 
+### Certificado MiniCA
+
+MiniCA emite certificados de la única autoridad configurada en Ajustes. El
+certificado es válido durante 90 días y Nginx Proxy Manager lo renueva
+automáticamente cuando quedan menos de 30 días. Los clientes que se conecten a
+estos hosts deben confiar previamente en el certificado raíz de MiniCA. El
+primer nombre DNS solicitado se usa como nombre común y todos los nombres
+solicitados se incluyen como nombres DNS alternativos.
+
 ### Certificado Personalizado
 
 Usa esta opción para cargar tu propio Certificado SSL, proporcionado por tu propia

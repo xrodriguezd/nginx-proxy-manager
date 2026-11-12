@@ -1,4 +1,5 @@
 import express from "express";
+import { testConnection as testMiniCAConnection } from "../internal/minica.js";
 import internalSetting from "../internal/setting.js";
 import jwtdecode from "../lib/express/jwt-decode.js";
 import apiValidator from "../lib/validator/api.js";
@@ -11,6 +12,23 @@ const router = express.Router({
 	strict: true,
 	mergeParams: true,
 });
+
+router
+	.route("/minica/test")
+	.options((_, res) => {
+		res.sendStatus(204);
+	})
+	.all(jwtdecode())
+	.post(async (req, res, next) => {
+		try {
+			await res.locals.access.can("settings:update", "minica");
+			await testMiniCAConnection();
+			res.status(200).send({ status: "ok" });
+		} catch (err) {
+			debug(logger, `${req.method.toUpperCase()} ${req.path}: ${err}`);
+			next(err);
+		}
+	});
 
 /**
  * /api/settings

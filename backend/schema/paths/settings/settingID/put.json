@@ -14,7 +14,7 @@
 			"schema": {
 				"type": "string",
 				"minLength": 1,
-				"enum": ["default-site"]
+				"enum": ["default-site", "minica"]
 			},
 			"required": true,
 			"description": "Setting ID",
@@ -34,7 +34,7 @@
 						"value": {
 							"type": "string",
 							"minLength": 1,
-							"enum": ["congratulations", "404", "444", "redirect", "html"],
+							"enum": ["congratulations", "404", "444", "redirect", "html", "configured"],
 							"example": "html"
 						},
 						"meta": {
@@ -46,6 +46,25 @@
 								},
 								"html": {
 									"type": "string"
+								},
+								"url": {
+									"type": "string",
+									"maxLength": 2048
+								},
+								"username": {
+									"type": "string",
+									"maxLength": 255
+								},
+								"password": {
+									"type": "string",
+									"maxLength": 255
+								},
+								"ca_id": {
+									"type": "string",
+									"maxLength": 255
+								},
+								"password_configured": {
+									"type": "boolean"
 								}
 							},
 							"example": {

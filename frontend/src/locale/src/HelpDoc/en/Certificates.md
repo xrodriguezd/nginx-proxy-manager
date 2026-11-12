@@ -26,6 +26,15 @@ certificate. Nor do you need to have your _Proxy Host_ configured for HTTP acces
 
 This process _does_ support wildcard domains.
 
+### MiniCA Certificate
+
+MiniCA issues certificates from the single certificate authority configured in
+Settings. The certificate is valid for 90 days and Nginx Proxy Manager renews
+it automatically when fewer than 30 days remain. The clients connecting to
+these hosts must already trust the MiniCA root certificate. MiniCA certificates
+include the first requested DNS name as the common name and all requested names
+as DNS subject alternative names.
+
 ### Custom Certificate
 
 Use this option to upload your own SSL Certificate, as provided by your own
